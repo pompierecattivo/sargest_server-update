@@ -513,6 +513,11 @@
                     <img id="qr-image" alt="QR Code" style="max-width:280px;">
                     <div id="qr-loading" style="padding:2rem;color:#666;">Generazione QR...</div>
                     <div id="qr-error" style="display:none;padding:2rem;color:#ef5350;"></div>
+                    <div id="qr-fallback" style="display:none;padding:1rem;">
+                        <p style="color:#666;font-size:0.85rem;margin-bottom:0.5rem;">Libreria QR non disponibile. Copia questo codice:</p>
+                        <textarea id="qr-fallback-text" readonly style="width:100%;height:80px;font-family:monospace;font-size:0.75rem;padding:0.5rem;border:1px solid #ccc;border-radius:4px;resize:none;"></textarea>
+                        <button id="qr-copy-btn" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#4fc3f7;color:#0d1b2a;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Copia codice</button>
+                    </div>
                 </div>
                 <p style="text-align: center; font-size: 0.85rem; color: #90a4ae; margin-top: 1rem;">
                     Mostra questo QR code all'operatore SARGest per una registrazione rapida
@@ -521,396 +526,18 @@
         </div>
     </div>
 
-    <!-- QR Code Generator - Fully inline, no external dependencies -->
+    <!-- QR Code - Load from jsDelivr with fallback message -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
-    // QRCode generator - simplified inline implementation
-    // Based on qrcode-generator by Kazuhiko Arase (MIT License)
-    var QRCodeGen = (function() {
-        var PAD0 = 0xEC, PAD1 = 0x11;
-
-        // Galois field tables
-        var EXP_TABLE = new Array(256);
-        var LOG_TABLE = new Array(256);
-        (function() {
-            for (var i = 0, x = 1; i < 256; i++) {
-                EXP_TABLE[i] = x;
-                LOG_TABLE[x] = i;
-                x <<= 1;
-                if (x >= 256) x ^= 0x11d;
-            }
-        })();
-
-        function gexp(n) { return EXP_TABLE[n % 255]; }
-        function glog(n) { return LOG_TABLE[n]; }
-
-        // Error correction polynomials
-        function getErrorCorrectPolynomial(ecLength) {
-            var a = [1];
-            for (var i = 0; i < ecLength; i++) {
-                var b = [1, gexp(i)];
-                var c = new Array(a.length + 1);
-                for (var j = 0; j < c.length; j++) c[j] = 0;
-                for (var j = 0; j < a.length; j++) {
-                    for (var k = 0; k < b.length; k++) {
-                        c[j + k] ^= (a[j] && b[k]) ? gexp((glog(a[j]) + glog(b[k])) % 255) : 0;
-                    }
-                }
-                a = c;
-            }
-            return a;
-        }
-
-        // RS blocks for version 1-10
-        var RS_BLOCKS = [
-            [1,26,19], [1,26,16], [1,26,13], [1,26,9],
-            [1,44,34], [1,44,28], [1,44,22], [1,44,16],
-            [1,70,55], [1,70,44], [2,35,17], [2,35,13],
-            [1,100,80], [2,50,32], [2,50,24], [4,25,9],
-            [1,134,108], [2,67,43], [2,33,15,2,34,16], [2,33,11,2,34,12],
-            [2,86,68], [4,43,27], [4,43,19], [4,43,15],
-            [2,98,78], [4,49,31], [2,32,14,4,33,15], [4,39,13,1,40,14],
-            [2,121,97], [2,60,38,2,61,39], [4,40,18,2,41,19], [4,40,14,2,41,15],
-            [2,146,116], [3,58,36,2,59,37], [4,36,16,4,37,17], [4,36,12,4,37,13],
-            [2,86,68,2,87,69], [4,69,43,1,70,44], [6,43,19,2,44,20], [6,43,15,2,44,16]
-        ];
-
-        // Get RS blocks for version and EC level
-        function getRSBlocks(version, ecLevel) {
-            var idx = (version - 1) * 4 + ecLevel;
-            var rsBlock = RS_BLOCKS[idx];
-            var list = [];
-            for (var i = 0; i < rsBlock.length; i += 3) {
-                var count = rsBlock[i];
-                var total = rsBlock[i + 1];
-                var data = rsBlock[i + 2];
-                for (var j = 0; j < count; j++) {
-                    list.push({ totalCount: total, dataCount: data });
-                }
-            }
-            return list;
-        }
-
-        // BCH encoding
-        function getBCHTypeInfo(data) {
-            var d = data << 10;
-            while (getBCHDigit(d) - 10 >= 0) d ^= (0x537 << (getBCHDigit(d) - 10));
-            return ((data << 10) | d) ^ 0x5412;
-        }
-
-        function getBCHTypeNumber(data) {
-            var d = data << 12;
-            while (getBCHDigit(d) - 12 >= 0) d ^= (0x1f25 << (getBCHDigit(d) - 12));
-            return (data << 12) | d;
-        }
-
-        function getBCHDigit(data) {
-            var digit = 0;
-            while (data != 0) { digit++; data >>>= 1; }
-            return digit;
-        }
-
-        // Pattern positions
-        var PATTERN_POSITION = [
-            [], [6,18], [6,22], [6,26], [6,30], [6,34],
-            [6,22,38], [6,24,42], [6,26,46], [6,28,50], [6,30,54]
-        ];
-
-        // Mask functions
-        var MASK_FUNCS = [
-            function(i,j) { return (i+j) % 2 == 0; },
-            function(i,j) { return i % 2 == 0; },
-            function(i,j) { return j % 3 == 0; },
-            function(i,j) { return (i+j) % 3 == 0; },
-            function(i,j) { return (Math.floor(i/2) + Math.floor(j/3)) % 2 == 0; },
-            function(i,j) { return (i*j) % 2 + (i*j) % 3 == 0; },
-            function(i,j) { return ((i*j) % 2 + (i*j) % 3) % 2 == 0; },
-            function(i,j) { return ((i*j) % 3 + (i+j) % 2) % 2 == 0; }
-        ];
-
-        // Main QR generator
-        function createQR(data, ecLevel) {
-            ecLevel = ecLevel || 0; // 0=M, 1=L, 2=H, 3=Q
-
-            // Convert string to bytes
-            var bytes = [];
-            for (var i = 0; i < data.length; i++) {
-                var c = data.charCodeAt(i);
-                if (c < 128) bytes.push(c);
-                else if (c < 2048) { bytes.push(0xC0 | (c >> 6)); bytes.push(0x80 | (c & 0x3F)); }
-                else { bytes.push(0xE0 | (c >> 12)); bytes.push(0x80 | ((c >> 6) & 0x3F)); bytes.push(0x80 | (c & 0x3F)); }
-            }
-
-            // Find minimum version
-            var version = 1;
-            for (; version <= 10; version++) {
-                var rsBlocks = getRSBlocks(version, ecLevel);
-                var totalData = 0;
-                for (var i = 0; i < rsBlocks.length; i++) totalData += rsBlocks[i].dataCount;
-                if (bytes.length + 3 <= totalData) break;
-            }
-            if (version > 10) throw new Error('Data too long');
-
-            // Create data buffer
-            var rsBlocks = getRSBlocks(version, ecLevel);
-            var totalData = 0, totalCount = 0;
-            for (var i = 0; i < rsBlocks.length; i++) {
-                totalData += rsBlocks[i].dataCount;
-                totalCount += rsBlocks[i].totalCount;
-            }
-
-            var buffer = [];
-            // Mode indicator (byte mode = 4) + char count
-            buffer.push(0x40 | (bytes.length >> 4));
-            buffer.push(((bytes.length & 0xF) << 4) | (bytes.length > 0 ? bytes[0] >> 4 : 0));
-            for (var i = 0; i < bytes.length; i++) {
-                buffer.push(((bytes[i] & 0xF) << 4) | (i + 1 < bytes.length ? bytes[i + 1] >> 4 : 0));
-            }
-
-            // Pad to data capacity
-            while (buffer.length < totalData) {
-                buffer.push(buffer.length % 2 == totalData % 2 ? PAD0 : PAD1);
-            }
-
-            // Create modules
-            var moduleCount = version * 4 + 17;
-            var modules = [];
-            for (var i = 0; i < moduleCount; i++) {
-                modules[i] = new Array(moduleCount);
-                for (var j = 0; j < moduleCount; j++) modules[i][j] = null;
-            }
-
-            // Setup patterns
-            function setupPositionProbe(row, col) {
-                for (var r = -1; r <= 7; r++) {
-                    for (var c = -1; c <= 7; c++) {
-                        if (row + r < 0 || moduleCount <= row + r || col + c < 0 || moduleCount <= col + c) continue;
-                        modules[row + r][col + c] =
-                            (0 <= r && r <= 6 && (c == 0 || c == 6)) ||
-                            (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
-                            (2 <= r && r <= 4 && 2 <= c && c <= 4);
-                    }
-                }
-            }
-
-            setupPositionProbe(0, 0);
-            setupPositionProbe(moduleCount - 7, 0);
-            setupPositionProbe(0, moduleCount - 7);
-
-            // Timing patterns
-            for (var i = 8; i < moduleCount - 8; i++) {
-                if (modules[i][6] == null) modules[i][6] = i % 2 == 0;
-                if (modules[6][i] == null) modules[6][i] = i % 2 == 0;
-            }
-
-            // Alignment patterns
-            if (version > 1) {
-                var pos = PATTERN_POSITION[version];
-                for (var i = 0; i < pos.length; i++) {
-                    for (var j = 0; j < pos.length; j++) {
-                        var row = pos[i], col = pos[j];
-                        if (modules[row][col] != null) continue;
-                        for (var r = -2; r <= 2; r++) {
-                            for (var c = -2; c <= 2; c++) {
-                                modules[row + r][col + c] =
-                                    r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Create error correction codewords
-            var dcdata = [], ecdata = [];
-            var offset = 0;
-            for (var r = 0; r < rsBlocks.length; r++) {
-                var dcCount = rsBlocks[r].dataCount;
-                var ecCount = rsBlocks[r].totalCount - dcCount;
-                dcdata[r] = buffer.slice(offset, offset + dcCount);
-                offset += dcCount;
-
-                var rsPoly = getErrorCorrectPolynomial(ecCount);
-                var rawPoly = dcdata[r].slice();
-                while (rawPoly.length < dcdata[r].length + ecCount) rawPoly.push(0);
-
-                for (var i = 0; i < dcdata[r].length; i++) {
-                    if (rawPoly[0] != 0) {
-                        var ratio = glog(rawPoly[0]);
-                        for (var j = 0; j < rsPoly.length; j++) {
-                            rawPoly[j] ^= gexp((glog(rsPoly[j]) + ratio) % 255);
-                        }
-                    }
-                    rawPoly.shift();
-                }
-                ecdata[r] = rawPoly;
-            }
-
-            // Interleave data and EC
-            var maxDc = 0, maxEc = 0;
-            for (var r = 0; r < rsBlocks.length; r++) {
-                maxDc = Math.max(maxDc, dcdata[r].length);
-                maxEc = Math.max(maxEc, ecdata[r].length);
-            }
-
-            var data = [];
-            for (var i = 0; i < maxDc; i++) {
-                for (var r = 0; r < rsBlocks.length; r++) {
-                    if (i < dcdata[r].length) data.push(dcdata[r][i]);
-                }
-            }
-            for (var i = 0; i < maxEc; i++) {
-                for (var r = 0; r < rsBlocks.length; r++) {
-                    if (i < ecdata[r].length) data.push(ecdata[r][i]);
-                }
-            }
-
-            // Map data with best mask
-            var bestMask = 0, minPenalty = Infinity;
-            for (var mask = 0; mask < 8; mask++) {
-                // Reset modules for format info
-                var testModules = [];
-                for (var i = 0; i < moduleCount; i++) {
-                    testModules[i] = modules[i].slice();
-                }
-
-                // Setup format info
-                var bits = getBCHTypeInfo((ecLevel << 3) | mask);
-                for (var i = 0; i < 15; i++) {
-                    var mod = ((bits >> i) & 1) == 1;
-                    if (i < 6) testModules[i][8] = mod;
-                    else if (i < 8) testModules[i + 1][8] = mod;
-                    else testModules[moduleCount - 15 + i][8] = mod;
-                }
-                for (var i = 0; i < 15; i++) {
-                    var mod = ((bits >> i) & 1) == 1;
-                    if (i < 8) testModules[8][moduleCount - i - 1] = mod;
-                    else if (i < 9) testModules[8][15 - i] = mod;
-                    else testModules[8][15 - i - 1] = mod;
-                }
-                testModules[moduleCount - 8][8] = true;
-
-                // Map data
-                var bitIdx = 0, byteIdx = 0, bitCount = 7;
-                var up = true;
-                for (var col = moduleCount - 1; col > 0; col -= 2) {
-                    if (col == 6) col--;
-                    for (var cnt = 0; cnt < moduleCount; cnt++) {
-                        var row = up ? moduleCount - 1 - cnt : cnt;
-                        for (var c = 0; c < 2; c++) {
-                            if (testModules[row][col - c] == null) {
-                                var dark = false;
-                                if (byteIdx < data.length) {
-                                    dark = ((data[byteIdx] >> bitCount) & 1) == 1;
-                                }
-                                if (MASK_FUNCS[mask](row, col - c)) dark = !dark;
-                                testModules[row][col - c] = dark;
-                                bitCount--;
-                                if (bitCount < 0) { byteIdx++; bitCount = 7; }
-                            }
-                        }
-                    }
-                    up = !up;
-                }
-
-                // Simple penalty calculation (just count consecutive same color)
-                var penalty = 0;
-                for (var i = 0; i < moduleCount; i++) {
-                    var rowCount = 1, colCount = 1;
-                    for (var j = 1; j < moduleCount; j++) {
-                        if (testModules[i][j] == testModules[i][j-1]) rowCount++;
-                        else { if (rowCount >= 5) penalty += rowCount - 2; rowCount = 1; }
-                        if (testModules[j][i] == testModules[j-1][i]) colCount++;
-                        else { if (colCount >= 5) penalty += colCount - 2; colCount = 1; }
-                    }
-                    if (rowCount >= 5) penalty += rowCount - 2;
-                    if (colCount >= 5) penalty += colCount - 2;
-                }
-
-                if (penalty < minPenalty) {
-                    minPenalty = penalty;
-                    bestMask = mask;
-                }
-            }
-
-            // Apply best mask
-            var bits = getBCHTypeInfo((ecLevel << 3) | bestMask);
-            for (var i = 0; i < 15; i++) {
-                var mod = ((bits >> i) & 1) == 1;
-                if (i < 6) modules[i][8] = mod;
-                else if (i < 8) modules[i + 1][8] = mod;
-                else modules[moduleCount - 15 + i][8] = mod;
-            }
-            for (var i = 0; i < 15; i++) {
-                var mod = ((bits >> i) & 1) == 1;
-                if (i < 8) modules[8][moduleCount - i - 1] = mod;
-                else if (i < 9) modules[8][15 - i] = mod;
-                else modules[8][15 - i - 1] = mod;
-            }
-            modules[moduleCount - 8][8] = true;
-
-            // Map data with best mask
-            var bitIdx = 0, byteIdx = 0, bitCount = 7;
-            var up = true;
-            for (var col = moduleCount - 1; col > 0; col -= 2) {
-                if (col == 6) col--;
-                for (var cnt = 0; cnt < moduleCount; cnt++) {
-                    var row = up ? moduleCount - 1 - cnt : cnt;
-                    for (var c = 0; c < 2; c++) {
-                        if (modules[row][col - c] == null) {
-                            var dark = false;
-                            if (byteIdx < data.length) {
-                                dark = ((data[byteIdx] >> bitCount) & 1) == 1;
-                            }
-                            if (MASK_FUNCS[bestMask](row, col - c)) dark = !dark;
-                            modules[row][col - c] = dark;
-                            bitCount--;
-                            if (bitCount < 0) { byteIdx++; bitCount = 7; }
-                        }
-                    }
-                }
-                up = !up;
-            }
-
-            return { modules: modules, size: moduleCount };
-        }
-
-        // Render to canvas
-        function toDataURL(data, size) {
-            size = size || 256;
-            var qr = createQR(data);
-            var cellSize = Math.floor(size / (qr.size + 8));
-            var margin = Math.floor((size - cellSize * qr.size) / 2);
-
-            var canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            var ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, size, size);
-
-            ctx.fillStyle = '#000000';
-            for (var r = 0; r < qr.size; r++) {
-                for (var c = 0; c < qr.size; c++) {
-                    if (qr.modules[r][c]) {
-                        ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
-                    }
-                }
-            }
-
-            return canvas.toDataURL('image/png');
-        }
-
-        return {
+    // Fallback: show manual entry if QR library fails to load
+    if (typeof QRCode === 'undefined') {
+        console.warn('QR library not loaded from CDN');
+        window.QRCode = {
             toDataURL: function(data, opts) {
-                opts = opts || {};
-                return Promise.resolve(toDataURL(data, opts.width || 256));
+                return Promise.reject(new Error('QR library not available'));
             }
         };
-    })();
-
-    // Expose as QRCode for compatibility
-    var QRCode = QRCodeGen;
-    console.log('QR library loaded inline');
+    }
     </script>
 
     <script>
@@ -1168,10 +795,12 @@
             const qrImage = document.getElementById('qr-image');
             const qrLoading = document.getElementById('qr-loading');
             const qrError = document.getElementById('qr-error');
+            const qrFallback = document.getElementById('qr-fallback');
 
             qrImage.style.display = 'none';
             qrLoading.style.display = 'block';
             qrError.style.display = 'none';
+            qrFallback.style.display = 'none';
 
             // Wait for library if still loading
             generateQrWithRetry(qrData, 0);
@@ -1181,21 +810,28 @@
             const qrImage = document.getElementById('qr-image');
             const qrLoading = document.getElementById('qr-loading');
             const qrError = document.getElementById('qr-error');
+            const qrFallback = document.getElementById('qr-fallback');
+            const qrFallbackText = document.getElementById('qr-fallback-text');
 
             console.log('Generating QR, attempt:', attempt);
             console.log('qrData:', qrData);
             console.log('QRCode available:', typeof QRCode !== 'undefined');
+            console.log('QRCode.toDataURL available:', typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function');
 
-            // Check if library is loaded
-            if (typeof QRCode === 'undefined') {
-                if (attempt < 10) {
+            // Check if library is loaded and has toDataURL method
+            const qrLibraryReady = typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function';
+
+            if (!qrLibraryReady) {
+                if (attempt < 15) {
                     // Wait and retry
-                    setTimeout(() => generateQrWithRetry(qrData, attempt + 1), 300);
+                    setTimeout(() => generateQrWithRetry(qrData, attempt + 1), 200);
                     return;
                 }
+                // Show text fallback instead of error
                 qrLoading.style.display = 'none';
-                qrError.style.display = 'block';
-                qrError.textContent = 'Libreria QR non caricata. Ricarica la pagina.';
+                qrFallback.style.display = 'block';
+                qrFallbackText.value = qrData;
+                console.log('Showing text fallback, QR library not available');
                 return;
             }
 
@@ -1213,11 +849,27 @@
             })
             .catch(function(err) {
                 console.error('QR generation error:', err);
+                // Show text fallback on error
                 qrLoading.style.display = 'none';
-                qrError.style.display = 'block';
-                qrError.textContent = 'Errore generazione QR: ' + (err.message || err);
+                qrFallback.style.display = 'block';
+                qrFallbackText.value = qrData;
             });
         }
+
+        // Copy fallback code to clipboard
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('qr-copy-btn').addEventListener('click', function() {
+                const text = document.getElementById('qr-fallback-text').value;
+                navigator.clipboard.writeText(text).then(function() {
+                    showToast('Codice copiato!');
+                }).catch(function() {
+                    // Fallback for older browsers
+                    document.getElementById('qr-fallback-text').select();
+                    document.execCommand('copy');
+                    showToast('Codice copiato!');
+                });
+            });
+        });
 
         // Generate QR data (compact JSON with SARGEST: prefix)
         function generateQrData(profile) {
