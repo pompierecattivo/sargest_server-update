@@ -33,6 +33,162 @@
             padding: 1rem 0 2rem;
         }
 
+        /* Install banner */
+        .install-banner {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            color: #0d1b2a;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+        }
+
+        .install-banner.hidden {
+            display: none;
+        }
+
+        .install-banner-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .install-banner-content {
+            flex: 1;
+        }
+
+        .install-banner-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .install-banner-text {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .install-banner-btn {
+            background: #0d1b2a;
+            color: #4fc3f7;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .install-banner-btn:hover {
+            background: #1e3a5f;
+        }
+
+        .install-banner-close {
+            background: none;
+            border: none;
+            color: #0d1b2a;
+            opacity: 0.6;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .install-banner-close:hover {
+            opacity: 1;
+        }
+
+        /* Install modal */
+        .install-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .install-modal.hidden {
+            display: none;
+        }
+
+        .install-modal-content {
+            background: #1e3a5f;
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 350px;
+            width: 100%;
+        }
+
+        .install-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .install-modal-header h3 {
+            color: #4fc3f7;
+            font-size: 1.1rem;
+        }
+
+        .install-modal-close {
+            background: none;
+            border: none;
+            color: #90a4ae;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .install-steps {
+            list-style: none;
+        }
+
+        .install-steps li {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: flex-start;
+        }
+
+        .install-step-num {
+            background: #4fc3f7;
+            color: #0d1b2a;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .install-step-text {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
+        .install-step-text strong {
+            color: #4fc3f7;
+        }
+
+        .install-step-icon {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
         header h1 {
             color: #4fc3f7;
             font-size: 1.8rem;
@@ -456,6 +612,30 @@
             <p>Registrazione Risorse SAR</p>
         </header>
 
+        <!-- Install Banner -->
+        <div id="install-banner" class="install-banner hidden">
+            <span class="install-banner-icon">📲</span>
+            <div class="install-banner-content">
+                <div class="install-banner-title">Installa l'app</div>
+                <div class="install-banner-text">Accesso rapido dalla home</div>
+            </div>
+            <button id="install-btn" class="install-banner-btn">Installa</button>
+            <button id="install-close" class="install-banner-close">&times;</button>
+        </div>
+
+        <!-- Install Modal (for iOS/manual instructions) -->
+        <div id="install-modal" class="install-modal hidden">
+            <div class="install-modal-content">
+                <div class="install-modal-header">
+                    <h3>📲 Installa SARGest</h3>
+                    <button class="install-modal-close" onclick="closeInstallModal()">&times;</button>
+                </div>
+                <ul id="install-steps" class="install-steps">
+                    <!-- Steps will be filled by JS based on device -->
+                </ul>
+            </div>
+        </div>
+
         <!-- Tab Navigation -->
         <div class="tabs">
             <button class="tab active" data-tab="profiles">I Miei Profili</button>
@@ -517,12 +697,14 @@
                 <div class="form-group">
                     <label>Tipo</label>
                     <div class="support-types">
-                        <button class="support-type-btn active" data-stype="vehicle">Veicolo</button>
-                        <button class="support-type-btn" data-stype="aircraft">Aeromobile</button>
+                        <button class="support-type-btn active" data-stype="veicolo">Veicolo</button>
                         <button class="support-type-btn" data-stype="drone">Drone</button>
-                        <button class="support-type-btn" data-stype="dog_unit">U. Cinofila</button>
-                        <button class="support-type-btn" data-stype="boat">Imbarcazione</button>
-                        <button class="support-type-btn" data-stype="equipment">Attrezzatura</button>
+                        <button class="support-type-btn" data-stype="unita_cinofila">U. Cinofila</button>
+                        <button class="support-type-btn" data-stype="elicottero">Elicottero</button>
+                        <button class="support-type-btn" data-stype="imbarcazione">Imbarcazione</button>
+                        <button class="support-type-btn" data-stype="aeromobile">Aeromobile</button>
+                        <button class="support-type-btn" data-stype="canadair">Canadair</button>
+                        <button class="support-type-btn" data-stype="altro">Altro</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -575,20 +757,24 @@
     <script>
         // Storage key
         const STORAGE_KEY = 'sargest_profiles';
+        const INSTALL_DISMISSED_KEY = 'sargest_install_dismissed';
 
-        // Support type labels
+        // Support type labels (match backend SupportType enum)
         const SUPPORT_TYPE_LABELS = {
-            vehicle: 'Veicolo',
-            aircraft: 'Aeromobile',
+            veicolo: 'Veicolo',
             drone: 'Drone',
-            dog_unit: 'Unita Cinofila',
-            boat: 'Imbarcazione',
-            equipment: 'Attrezzatura'
+            unita_cinofila: 'Unità Cinofila',
+            elicottero: 'Elicottero',
+            imbarcazione: 'Imbarcazione',
+            aeromobile: 'Aeromobile',
+            canadair: 'Canadair',
+            altro: 'Altro'
         };
 
         // Current state
-        let currentSupportType = 'vehicle';
+        let currentSupportType = 'veicolo';
         let editingProfileId = null;
+        let deferredInstallPrompt = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -596,7 +782,129 @@
             initTypeTabs();
             initSupportTypes();
             renderProfiles();
+            initInstallBanner();
         });
+
+        // ==================== PWA INSTALL ====================
+        function initInstallBanner() {
+            const banner = document.getElementById('install-banner');
+            const installBtn = document.getElementById('install-btn');
+            const closeBtn = document.getElementById('install-close');
+
+            // Check if already installed (standalone mode)
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                return; // Already installed, don't show banner
+            }
+
+            // Check if user dismissed banner recently
+            const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY);
+            if (dismissed) {
+                const dismissedTime = parseInt(dismissed, 10);
+                // Don't show again for 7 days
+                if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
+                    return;
+                }
+            }
+
+            // Listen for beforeinstallprompt (Chrome/Edge on Android and desktop)
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                banner.classList.remove('hidden');
+            });
+
+            // If no beforeinstallprompt after 2 seconds, show manual instructions
+            setTimeout(() => {
+                if (!deferredInstallPrompt && !banner.classList.contains('hidden') === false) {
+                    // Show banner for iOS/other browsers
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    const isAndroid = /Android/.test(navigator.userAgent);
+                    if (isIOS || isAndroid || true) { // Show for all
+                        banner.classList.remove('hidden');
+                    }
+                }
+            }, 2000);
+
+            // Install button click
+            installBtn.addEventListener('click', async () => {
+                if (deferredInstallPrompt) {
+                    // Use native install prompt
+                    deferredInstallPrompt.prompt();
+                    const result = await deferredInstallPrompt.userChoice;
+                    if (result.outcome === 'accepted') {
+                        banner.classList.add('hidden');
+                    }
+                    deferredInstallPrompt = null;
+                } else {
+                    // Show manual instructions modal
+                    showInstallModal();
+                }
+            });
+
+            // Close button
+            closeBtn.addEventListener('click', () => {
+                banner.classList.add('hidden');
+                localStorage.setItem(INSTALL_DISMISSED_KEY, Date.now().toString());
+            });
+
+            // Show banner after a short delay
+            setTimeout(() => {
+                if (!window.matchMedia('(display-mode: standalone)').matches) {
+                    banner.classList.remove('hidden');
+                }
+            }, 3000);
+        }
+
+        function showInstallModal() {
+            const modal = document.getElementById('install-modal');
+            const stepsList = document.getElementById('install-steps');
+
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+            const isChrome = /Chrome/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+
+            let steps = [];
+
+            if (isIOS) {
+                steps = [
+                    { text: 'Tocca l\'icona <span class="install-step-icon">⬆️</span> <strong>Condividi</strong> in basso' },
+                    { text: 'Scorri e tocca <strong>"Aggiungi a schermata Home"</strong>' },
+                    { text: 'Tocca <strong>"Aggiungi"</strong> in alto a destra' }
+                ];
+            } else if (isAndroid && isChrome) {
+                steps = [
+                    { text: 'Tocca il menu <span class="install-step-icon">⋮</span> in alto a destra' },
+                    { text: 'Seleziona <strong>"Aggiungi a schermata Home"</strong>' },
+                    { text: 'Conferma toccando <strong>"Aggiungi"</strong>' }
+                ];
+            } else if (isChrome) {
+                steps = [
+                    { text: 'Cerca l\'icona <span class="install-step-icon">⊕</span> nella barra degli indirizzi' },
+                    { text: 'Oppure: Menu <span class="install-step-icon">⋮</span> → <strong>"Installa app"</strong>' },
+                    { text: 'Conferma cliccando <strong>"Installa"</strong>' }
+                ];
+            } else {
+                steps = [
+                    { text: 'Apri il menu del browser' },
+                    { text: 'Cerca <strong>"Aggiungi a schermata Home"</strong> o <strong>"Installa"</strong>' },
+                    { text: 'Conferma l\'installazione' }
+                ];
+            }
+
+            stepsList.innerHTML = steps.map((step, i) => `
+                <li>
+                    <span class="install-step-num">${i + 1}</span>
+                    <span class="install-step-text">${step.text}</span>
+                </li>
+            `).join('');
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeInstallModal() {
+            document.getElementById('install-modal').classList.add('hidden');
+        }
 
         // Tab navigation
         function initTabs() {
@@ -794,7 +1102,7 @@
                 document.querySelectorAll('.support-type-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.stype === profile.supportType);
                 });
-                currentSupportType = profile.supportType || 'vehicle';
+                currentSupportType = profile.supportType || 'veicolo';
             }
         }
 
@@ -1025,11 +1333,11 @@
             // Reset to person type
             document.querySelector('.tab[data-type="person"]').click();
 
-            // Reset support type to vehicle
+            // Reset support type to veicolo
             document.querySelectorAll('.support-type-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.stype === 'vehicle');
+                btn.classList.toggle('active', btn.dataset.stype === 'veicolo');
             });
-            currentSupportType = 'vehicle';
+            currentSupportType = 'veicolo';
         }
 
         // Show toast notification
