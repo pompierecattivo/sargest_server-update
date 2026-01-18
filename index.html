@@ -184,19 +184,30 @@
             background-color: #ffffff !important;
             border-radius: 12px;
             margin: 1rem 0;
-            color-scheme: light;
+            color-scheme: only light;
+            forced-color-adjust: none;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .qr-container * {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
         }
 
         .qr-container canvas,
         .qr-container img {
             max-width: 100%;
             background: #ffffff !important;
+            background-color: #ffffff !important;
         }
 
         #qr-canvas {
             background: #ffffff !important;
+            background-color: #ffffff !important;
             filter: none !important;
             -webkit-filter: none !important;
+            isolation: isolate;
         }
 
         #qr-canvas canvas,
@@ -204,6 +215,20 @@
             filter: none !important;
             -webkit-filter: none !important;
             mix-blend-mode: normal !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+        }
+
+        /* Force light mode for QR section regardless of system preference */
+        @media (prefers-color-scheme: dark) {
+            .qr-container,
+            .qr-container *,
+            #qr-canvas,
+            #qr-canvas * {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color-scheme: only light !important;
+            }
         }
 
         .qr-placeholder {
@@ -526,8 +551,8 @@
             </div>
             <div class="modal-body">
                 <p id="qr-profile-name" style="text-align: center; margin-bottom: 1rem; color: #90a4ae;"></p>
-                <div class="qr-container" style="background-color:#fff !important;">
-                    <div id="qr-canvas" style="display:inline-block;background-color:#fff !important;"></div>
+                <div class="qr-container" style="background:#ffffff !important;background-color:#ffffff !important;color-scheme:only light !important;" data-theme="light">
+                    <div id="qr-canvas" style="display:inline-block;background:#ffffff !important;background-color:#ffffff !important;color-scheme:only light !important;"></div>
                     <img id="qr-image" alt="QR Code" style="max-width:280px;display:none;">
                     <div id="qr-loading" style="padding:2rem;color:#666;">Generazione QR...</div>
                     <div id="qr-error" style="display:none;padding:2rem;color:#ef5350;"></div>
@@ -850,12 +875,14 @@
                 qrCanvas.style.backgroundColor = '#ffffff';
                 qrCanvas.style.padding = '16px';
                 qrCanvas.style.borderRadius = '8px';
+                qrCanvas.style.colorScheme = 'only light';
 
-                // Force light theme on container
+                // Force light theme on container - very aggressive
                 var container = document.querySelector('.qr-container');
                 if (container) {
                     container.style.backgroundColor = '#ffffff';
-                    container.style.colorScheme = 'light';
+                    container.style.colorScheme = 'only light';
+                    container.setAttribute('data-theme', 'light');
                 }
 
                 // Use qrcodejs library (constructor-based API)
@@ -871,7 +898,13 @@
                 // Hide loading after a short delay and ensure white background on generated elements
                 setTimeout(function() {
                     qrLoading.style.display = 'none';
-                    // Force white background on canvas/img inside qr-canvas
+                    // Force white background on ALL elements inside qr-canvas
+                    var allElements = qrCanvas.querySelectorAll('*');
+                    allElements.forEach(function(el) {
+                        el.style.backgroundColor = '#ffffff';
+                        el.style.background = '#ffffff';
+                        el.style.colorScheme = 'only light';
+                    });
                     var innerCanvas = qrCanvas.querySelector('canvas');
                     var innerImg = qrCanvas.querySelector('img');
                     if (innerCanvas) {
