@@ -837,6 +837,16 @@
                 // Clear previous QR code
                 qrCanvas.innerHTML = '';
                 qrCanvas.style.display = 'inline-block';
+                qrCanvas.style.backgroundColor = '#ffffff';
+                qrCanvas.style.padding = '16px';
+                qrCanvas.style.borderRadius = '8px';
+
+                // Force light theme on container
+                var container = document.querySelector('.qr-container');
+                if (container) {
+                    container.style.backgroundColor = '#ffffff';
+                    container.style.colorScheme = 'light';
+                }
 
                 // Use qrcodejs library (constructor-based API)
                 new QRCode(qrCanvas, {
@@ -848,11 +858,22 @@
                     correctLevel: QRCode.CorrectLevel.M
                 });
 
-                // Hide loading after a short delay
+                // Hide loading after a short delay and ensure white background on generated elements
                 setTimeout(function() {
                     qrLoading.style.display = 'none';
+                    // Force white background on canvas/img inside qr-canvas
+                    var innerCanvas = qrCanvas.querySelector('canvas');
+                    var innerImg = qrCanvas.querySelector('img');
+                    if (innerCanvas) {
+                        innerCanvas.style.backgroundColor = '#ffffff';
+                        innerCanvas.style.display = 'block';
+                    }
+                    if (innerImg) {
+                        innerImg.style.backgroundColor = '#ffffff';
+                        innerImg.style.display = 'block';
+                    }
                     console.log('QR generated successfully');
-                }, 50);
+                }, 100);
             } catch (err) {
                 console.error('QR generation error:', err);
                 // Show text fallback on error
