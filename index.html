@@ -509,8 +509,8 @@
             <div class="modal-body">
                 <p id="qr-profile-name" style="text-align: center; margin-bottom: 1rem; color: #90a4ae;"></p>
                 <div class="qr-container">
-                    <canvas id="qr-canvas" style="display:none;"></canvas>
-                    <img id="qr-image" alt="QR Code" style="max-width:280px;">
+                    <div id="qr-canvas" style="display:inline-block;"></div>
+                    <img id="qr-image" alt="QR Code" style="max-width:280px;display:none;">
                     <div id="qr-loading" style="padding:2rem;color:#666;">Generazione QR...</div>
                     <div id="qr-error" style="display:none;padding:2rem;color:#ef5350;"></div>
                     <div id="qr-fallback" style="display:none;padding:1rem;">
@@ -526,19 +526,8 @@
         </div>
     </div>
 
-    <!-- QR Code - Load from jsDelivr with fallback message -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script>
-    // Fallback: show manual entry if QR library fails to load
-    if (typeof QRCode === 'undefined') {
-        console.warn('QR library not loaded from CDN');
-        window.QRCode = {
-            toDataURL: function(data, opts) {
-                return Promise.reject(new Error('QR library not available'));
-            }
-        };
-    }
-    </script>
+    <!-- QR Code - qrcodejs library (more compatible) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script>
         // Storage key
@@ -796,11 +785,14 @@
             const qrLoading = document.getElementById('qr-loading');
             const qrError = document.getElementById('qr-error');
             const qrFallback = document.getElementById('qr-fallback');
+            const qrCanvas = document.getElementById('qr-canvas');
 
             qrImage.style.display = 'none';
             qrLoading.style.display = 'block';
             qrError.style.display = 'none';
             qrFallback.style.display = 'none';
+            qrCanvas.style.display = 'none';
+            qrCanvas.innerHTML = '';
 
             // Wait for library if still loading
             generateQrWithRetry(qrData, 0);
@@ -812,16 +804,14 @@
             const qrError = document.getElementById('qr-error');
             const qrFallback = document.getElementById('qr-fallback');
             const qrFallbackText = document.getElementById('qr-fallback-text');
+            const qrCanvas = document.getElementById('qr-canvas');
 
             console.log('Generating QR, attempt:', attempt);
             console.log('qrData:', qrData);
             console.log('QRCode available:', typeof QRCode !== 'undefined');
-            console.log('QRCode.toDataURL available:', typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function');
 
-            // Check if library is loaded and has toDataURL method
-            const qrLibraryReady = typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function';
-
-            if (!qrLibraryReady) {
+            // Check if library is loaded
+            if (typeof QRCode === 'undefined') {
                 if (attempt < 15) {
                     // Wait and retry
                     setTimeout(() => generateQrWithRetry(qrData, attempt + 1), 200);
@@ -835,25 +825,34 @@
                 return;
             }
 
-            // Use QRCode.toDataURL from qrcode npm package
-            QRCode.toDataURL(qrData, {
-                width: 280,
-                margin: 2,
-                color: { dark: '#000000', light: '#ffffff' }
-            })
-            .then(function(dataUrl) {
-                console.log('QR generated successfully');
-                qrImage.src = dataUrl;
-                qrImage.style.display = 'block';
-                qrLoading.style.display = 'none';
-            })
-            .catch(function(err) {
+            try {
+                // Clear previous QR code
+                qrCanvas.innerHTML = '';
+                qrCanvas.style.display = 'inline-block';
+
+                // Use qrcodejs library (constructor-based API)
+                new QRCode(qrCanvas, {
+                    text: qrData,
+                    width: 256,
+                    height: 256,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                // Hide loading after a short delay
+                setTimeout(function() {
+                    qrLoading.style.display = 'none';
+                    console.log('QR generated successfully');
+                }, 50);
+            } catch (err) {
                 console.error('QR generation error:', err);
                 // Show text fallback on error
                 qrLoading.style.display = 'none';
+                qrCanvas.style.display = 'none';
                 qrFallback.style.display = 'block';
                 qrFallbackText.value = qrData;
-            });
+            }
         }
 
         // Copy fallback code to clipboard
