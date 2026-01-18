@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e3a5f">
+    <meta name="description" content="SARGest - Registrazione Risorse per Search and Rescue">
+    <title>SARGest - Registra Risorsa</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 1rem 0 2rem;
+        }
+
+        header h1 {
+            color: #4fc3f7;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: #90a4ae;
+            font-size: 0.9rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #90a4ae;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #4fc3f7;
+            color: #0d1b2a;
+            font-weight: 600;
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            color: #4fc3f7;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #b0bec5;
+            font-size: 0.85rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4fc3f7;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: #1e3a5f;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4fc3f7;
+            color: #0d1b2a;
+        }
+
+        .btn-primary:hover {
+            background: #81d4fa;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-danger {
+            background: #ef5350;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #f44336;
+        }
+
+        .btn-small {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            width: auto;
+        }
+
+        .qr-container {
+            text-align: center;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .qr-container canvas {
+            max-width: 100%;
+        }
+
+        .qr-placeholder {
+            padding: 3rem;
+            color: #90a4ae;
+            font-size: 0.9rem;
+        }
+
+        .profiles-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .profile-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-type {
+            font-size: 0.8rem;
+            color: #90a4ae;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .icon-btn.qr {
+            background: rgba(79, 195, 247, 0.2);
+            color: #4fc3f7;
+        }
+
+        .icon-btn.delete {
+            background: rgba(239, 83, 80, 0.2);
+            color: #ef5350;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #90a4ae;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1e3a5f;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-header h3 {
+            color: #4fc3f7;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #90a4ae;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .support-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .support-type-btn {
+            padding: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: transparent;
+            color: #90a4ae;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .support-type-btn.active {
+            border-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.2);
+            color: #4fc3f7;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 2000;
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        .toast.error {
+            background: #ef5350;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SARGest</h1>
+            <p>Registrazione Risorse SAR</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" data-tab="profiles">I Miei Profili</button>
+            <button class="tab" data-tab="new">Nuovo Profilo</button>
+        </div>
+
+        <!-- Profiles Tab -->
+        <div id="profiles-tab" class="tab-content">
+            <div class="card">
+                <h2>Profili Salvati</h2>
+                <div id="profiles-list" class="profiles-list">
+                    <div class="empty-state">
+                        Nessun profilo salvato.<br>
+                        Crea il tuo primo profilo!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Profile Tab -->
+        <div id="new-tab" class="tab-content hidden">
+            <div class="card">
+                <h2>Tipo Risorsa</h2>
+                <div class="tabs" style="margin-bottom: 0;">
+                    <button class="tab active" data-type="person">Persona</button>
+                    <button class="tab" data-type="support">Mezzo/Apparato</button>
+                </div>
+            </div>
+
+            <!-- Person Form -->
+            <div id="person-form" class="card">
+                <h2>Dati Persona</h2>
+                <div class="form-group">
+                    <label>Nome e Cognome *</label>
+                    <input type="text" id="person-name" placeholder="Mario Rossi" required>
+                </div>
+                <div class="form-group">
+                    <label>Telefono</label>
+                    <input type="tel" id="person-phone" placeholder="+39 333 1234567">
+                </div>
+                <div class="form-group">
+                    <label>Organizzazione</label>
+                    <input type="text" id="person-org" placeholder="Es. Soccorso Alpino, Protezione Civile">
+                </div>
+                <div class="form-group">
+                    <label>Ruolo/Qualifica</label>
+                    <input type="text" id="person-role" placeholder="Es. Tecnico, Medico, Cinofilo">
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <textarea id="person-notes" rows="2" placeholder="Altre informazioni utili..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveProfile('person')">Salva Profilo</button>
+            </div>
+
+            <!-- Support Form -->
+            <div id="support-form" class="card hidden">
+                <h2>Dati Mezzo/Apparato</h2>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <div class="support-types">
+                        <button class="support-type-btn active" data-stype="vehicle">Veicolo</button>
+                        <button class="support-type-btn" data-stype="aircraft">Aeromobile</button>
+                        <button class="support-type-btn" data-stype="drone">Drone</button>
+                        <button class="support-type-btn" data-stype="dog_unit">U. Cinofila</button>
+                        <button class="support-type-btn" data-stype="boat">Imbarcazione</button>
+                        <button class="support-type-btn" data-stype="equipment">Attrezzatura</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nome/Identificativo *</label>
+                    <input type="text" id="support-name" placeholder="Es. Jeep Renegade, Drone DJI">
+                </div>
+                <div class="form-group">
+                    <label>Targa/Matricola</label>
+                    <input type="text" id="support-plate" placeholder="AA123BB">
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <textarea id="support-notes" rows="2" placeholder="Altre informazioni utili..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveProfile('support')">Salva Profilo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qr-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>QR Code</h3>
+                <button class="modal-close" onclick="closeQrModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="qr-profile-name" style="text-align: center; margin-bottom: 1rem; color: #90a4ae;"></p>
+                <div class="qr-container">
+                    <canvas id="qr-canvas"></canvas>
+                </div>
+                <p style="text-align: center; font-size: 0.85rem; color: #90a4ae; margin-top: 1rem;">
+                    Mostra questo QR code all'operatore SARGest per una registrazione rapida
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- QRCode.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+    <script>
+        // Storage key
+        const STORAGE_KEY = 'sargest_profiles';
+
+        // Support type labels
+        const SUPPORT_TYPE_LABELS = {
+            vehicle: 'Veicolo',
+            aircraft: 'Aeromobile',
+            drone: 'Drone',
+            dog_unit: 'Unita Cinofila',
+            boat: 'Imbarcazione',
+            equipment: 'Attrezzatura'
+        };
+
+        // Current state
+        let currentSupportType = 'vehicle';
+        let editingProfileId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
+            initTypeTabs();
+            initSupportTypes();
+            renderProfiles();
+        });
+
+        // Tab navigation
+        function initTabs() {
+            document.querySelectorAll('.tabs > .tab[data-tab]').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.dataset.tab;
+
+                    // Update tab buttons
+                    document.querySelectorAll('.tabs > .tab[data-tab]').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Update tab content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+
+                    // Reset form when switching to new tab
+                    if (tabId === 'new') {
+                        resetForm();
+                    }
+                });
+            });
+        }
+
+        // Person/Support type tabs
+        function initTypeTabs() {
+            document.querySelectorAll('.tab[data-type]').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const type = tab.dataset.type;
+
+                    // Update tab buttons
+                    document.querySelectorAll('.tab[data-type]').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Show/hide forms
+                    document.getElementById('person-form').classList.toggle('hidden', type !== 'person');
+                    document.getElementById('support-form').classList.toggle('hidden', type !== 'support');
+                });
+            });
+        }
+
+        // Support type buttons
+        function initSupportTypes() {
+            document.querySelectorAll('.support-type-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.support-type-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSupportType = btn.dataset.stype;
+                });
+            });
+        }
+
+        // Get profiles from localStorage
+        function getProfiles() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        // Save profiles to localStorage
+        function setProfiles(profiles) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+        }
+
+        // Render profiles list
+        function renderProfiles() {
+            const profiles = getProfiles();
+            const container = document.getElementById('profiles-list');
+
+            if (profiles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        Nessun profilo salvato.<br>
+                        Crea il tuo primo profilo!
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = profiles.map((profile, index) => {
+                const typeLabel = profile.type === 'person'
+                    ? 'Persona'
+                    : SUPPORT_TYPE_LABELS[profile.supportType] || 'Supporto';
+                const name = profile.type === 'person' ? profile.name : profile.name;
+                const subtitle = profile.type === 'person'
+                    ? (profile.organization || profile.role || '')
+                    : (profile.plate || '');
+
+                return `
+                    <div class="profile-item">
+                        <div class="profile-info">
+                            <div class="profile-name">${escapeHtml(name)}</div>
+                            <div class="profile-type">${typeLabel}${subtitle ? ' - ' + escapeHtml(subtitle) : ''}</div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="icon-btn qr" onclick="showQr(${index})" title="Mostra QR">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v3h-2v-3zm3 3h3v2h-3v-2zm0 3h3v3h-3v-3zm-3 0h2v3h-2v-3z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn" onclick="editProfile(${index})" title="Modifica">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn delete" onclick="deleteProfile(${index})" title="Elimina">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Save profile
+        function saveProfile(type) {
+            let profile;
+
+            if (type === 'person') {
+                const name = document.getElementById('person-name').value.trim();
+                if (!name) {
+                    showToast('Inserisci nome e cognome', true);
+                    return;
+                }
+
+                profile = {
+                    type: 'person',
+                    name: name,
+                    phone: document.getElementById('person-phone').value.trim(),
+                    organization: document.getElementById('person-org').value.trim(),
+                    role: document.getElementById('person-role').value.trim(),
+                    notes: document.getElementById('person-notes').value.trim()
+                };
+            } else {
+                const name = document.getElementById('support-name').value.trim();
+                if (!name) {
+                    showToast('Inserisci nome/identificativo', true);
+                    return;
+                }
+
+                profile = {
+                    type: 'support',
+                    supportType: currentSupportType,
+                    name: name,
+                    plate: document.getElementById('support-plate').value.trim(),
+                    notes: document.getElementById('support-notes').value.trim()
+                };
+            }
+
+            const profiles = getProfiles();
+
+            if (editingProfileId !== null) {
+                profiles[editingProfileId] = profile;
+                editingProfileId = null;
+                showToast('Profilo aggiornato');
+            } else {
+                profiles.push(profile);
+                showToast('Profilo salvato');
+            }
+
+            setProfiles(profiles);
+            renderProfiles();
+
+            // Switch to profiles tab
+            document.querySelector('.tab[data-tab="profiles"]').click();
+        }
+
+        // Edit profile
+        function editProfile(index) {
+            const profiles = getProfiles();
+            const profile = profiles[index];
+
+            editingProfileId = index;
+
+            // Switch to new tab
+            document.querySelector('.tab[data-tab="new"]').click();
+
+            if (profile.type === 'person') {
+                document.querySelector('.tab[data-type="person"]').click();
+                document.getElementById('person-name').value = profile.name || '';
+                document.getElementById('person-phone').value = profile.phone || '';
+                document.getElementById('person-org').value = profile.organization || '';
+                document.getElementById('person-role').value = profile.role || '';
+                document.getElementById('person-notes').value = profile.notes || '';
+            } else {
+                document.querySelector('.tab[data-type="support"]').click();
+                document.getElementById('support-name').value = profile.name || '';
+                document.getElementById('support-plate').value = profile.plate || '';
+                document.getElementById('support-notes').value = profile.notes || '';
+
+                // Set support type
+                document.querySelectorAll('.support-type-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.stype === profile.supportType);
+                });
+                currentSupportType = profile.supportType || 'vehicle';
+            }
+        }
+
+        // Delete profile
+        function deleteProfile(index) {
+            if (!confirm('Eliminare questo profilo?')) return;
+
+            const profiles = getProfiles();
+            profiles.splice(index, 1);
+            setProfiles(profiles);
+            renderProfiles();
+            showToast('Profilo eliminato');
+        }
+
+        // Show QR code
+        function showQr(index) {
+            const profiles = getProfiles();
+            const profile = profiles[index];
+
+            // Generate compact QR data
+            const qrData = generateQrData(profile);
+
+            // Update modal
+            document.getElementById('qr-profile-name').textContent = profile.name;
+            document.getElementById('qr-modal').classList.add('active');
+
+            // Generate QR code
+            const canvas = document.getElementById('qr-canvas');
+            QRCode.toCanvas(canvas, qrData, {
+                width: 280,
+                margin: 2,
+                color: {
+                    dark: '#0d1b2a',
+                    light: '#ffffff'
+                }
+            }, function(error) {
+                if (error) {
+                    console.error('QR generation error:', error);
+                    showToast('Errore generazione QR', true);
+                }
+            });
+        }
+
+        // Generate QR data (compact JSON with SARGEST: prefix)
+        function generateQrData(profile) {
+            // Compact keys to minimize QR size
+            // t = type (p=person, s=support)
+            // n = name
+            // p = phone (person) / plate (support)
+            // o = organization (person) / supportType (support)
+            // r = role
+            // x = notes
+
+            let compact;
+
+            if (profile.type === 'person') {
+                compact = {
+                    t: 'p',
+                    n: profile.name
+                };
+                if (profile.phone) compact.p = profile.phone;
+                if (profile.organization) compact.o = profile.organization;
+                if (profile.role) compact.r = profile.role;
+                if (profile.notes) compact.x = profile.notes;
+            } else {
+                compact = {
+                    t: 's',
+                    n: profile.name,
+                    o: profile.supportType
+                };
+                if (profile.plate) compact.p = profile.plate;
+                if (profile.notes) compact.x = profile.notes;
+            }
+
+            // Base64 encode
+            const json = JSON.stringify(compact);
+            const base64 = btoa(unescape(encodeURIComponent(json)));
+
+            return 'SARGEST:' + base64;
+        }
+
+        // Close QR modal
+        function closeQrModal() {
+            document.getElementById('qr-modal').classList.remove('active');
+        }
+
+        // Click outside modal to close
+        document.getElementById('qr-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeQrModal();
+            }
+        });
+
+        // Reset form
+        function resetForm() {
+            editingProfileId = null;
+            document.getElementById('person-name').value = '';
+            document.getElementById('person-phone').value = '';
+            document.getElementById('person-org').value = '';
+            document.getElementById('person-role').value = '';
+            document.getElementById('person-notes').value = '';
+            document.getElementById('support-name').value = '';
+            document.getElementById('support-plate').value = '';
+            document.getElementById('support-notes').value = '';
+
+            // Reset to person type
+            document.querySelector('.tab[data-type="person"]').click();
+
+            // Reset support type to vehicle
+            document.querySelectorAll('.support-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.stype === 'vehicle');
+            });
+            currentSupportType = 'vehicle';
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeQrModal();
+            }
+        });
+    </script>
+</body>
+</html>
