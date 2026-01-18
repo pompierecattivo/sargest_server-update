@@ -528,18 +528,29 @@
     // Wrapper function for easy use
     function generateQRDataURL(text, size) {
         size = size || 280;
-        try {
-            var qr = qrcode(0, 'M');
-            qr.addData(text);
-            qr.make();
-            var cellSize = Math.floor(size / (qr.getModuleCount() + 8));
-            return qr.createDataURL(cellSize, cellSize * 2);
-        } catch (e) {
-            console.error('QR generation error:', e);
-            return null;
+        console.log('generateQRDataURL called with text length:', text.length);
+
+        // Check if qrcode function exists
+        if (typeof qrcode !== 'function') {
+            throw new Error('qrcode library not loaded');
         }
+
+        var qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+
+        var moduleCount = qr.getModuleCount();
+        console.log('QR module count:', moduleCount);
+
+        var cellSize = Math.max(2, Math.floor(size / (moduleCount + 8)));
+        console.log('Cell size:', cellSize);
+
+        var dataUrl = qr.createDataURL(cellSize, cellSize * 2);
+        console.log('DataURL generated, length:', dataUrl ? dataUrl.length : 0);
+
+        return dataUrl;
     }
-    console.log('QR library loaded inline');
+    console.log('QR library loaded inline, qrcode type:', typeof qrcode);
     </script>
 
     <script>
@@ -812,24 +823,28 @@
             const qrError = document.getElementById('qr-error');
 
             console.log('Generating QR with inline library...');
+            console.log('qrData:', qrData);
+            console.log('typeof qrcode:', typeof qrcode);
+            console.log('typeof generateQRDataURL:', typeof generateQRDataURL);
 
             try {
                 // Use inline qrcode-generator library
                 const dataUrl = generateQRDataURL(qrData, 280);
 
                 if (dataUrl) {
-                    console.log('QR generated successfully');
+                    console.log('QR generated successfully, dataUrl length:', dataUrl.length);
                     qrImage.src = dataUrl;
                     qrImage.style.display = 'block';
                     qrLoading.style.display = 'none';
                 } else {
-                    throw new Error('Failed to generate QR data URL');
+                    throw new Error('generateQRDataURL returned null');
                 }
             } catch (e) {
                 console.error('QR exception:', e);
+                console.error('Stack:', e.stack);
                 qrLoading.style.display = 'none';
                 qrError.style.display = 'block';
-                qrError.textContent = 'Errore generazione QR: ' + e.message;
+                qrError.textContent = 'Errore: ' + (e.message || e);
             }
         }
 
