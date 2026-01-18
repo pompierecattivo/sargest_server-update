@@ -521,36 +521,41 @@
         </div>
     </div>
 
-    <!-- QR Code Generator - Inline minimal library (no CDN dependency) -->
+    <!-- QR Code Generator - Use QRCode.js from CDN with multiple fallbacks -->
     <script>
-    // qrcode-generator minified - MIT License - https://github.com/kazuhikoarase/qrcode-generator
-    var qrcode=function(){var qrcode=function(typeNumber,errorCorrectionLevel){var PAD0=0xEC,PAD1=0x11,_typeNumber=typeNumber,_errorCorrectionLevel=QRErrorCorrectionLevel[errorCorrectionLevel],_modules=null,_moduleCount=0,_dataCache=null,_dataList=[],_this={},makeImpl=function(test,maskPattern){_moduleCount=_typeNumber*4+17;_modules=function(moduleCount){var modules=[];for(var row=0;row<moduleCount;row+=1){modules[row]=[];for(var col=0;col<moduleCount;col+=1){modules[row][col]=null}}return modules}(_moduleCount);setupPositionProbePattern(0,0);setupPositionProbePattern(_moduleCount-7,0);setupPositionProbePattern(0,_moduleCount-7);setupPositionAdjustPattern();setupTimingPattern();setupTypeInfo(test,maskPattern);if(_typeNumber>=7){setupTypeNumber(test)}if(_dataCache==null){_dataCache=createData(_typeNumber,_errorCorrectionLevel,_dataList)}mapData(_dataCache,maskPattern)},setupPositionProbePattern=function(row,col){for(var r=-1;r<=7;r+=1){if(row+r<=-1||_moduleCount<=row+r)continue;for(var c=-1;c<=7;c+=1){if(col+c<=-1||_moduleCount<=col+c)continue;if((0<=r&&r<=6&&(c==0||c==6))||(0<=c&&c<=6&&(r==0||r==6))||(2<=r&&r<=4&&2<=c&&c<=4)){_modules[row+r][col+c]=true}else{_modules[row+r][col+c]=false}}}},getBestMaskPattern=function(){var minLostPoint=0,pattern=0;for(var i=0;i<8;i+=1){makeImpl(true,i);var lostPoint=getLostPoint();if(i==0||minLostPoint>lostPoint){minLostPoint=lostPoint;pattern=i}}return pattern},setupTimingPattern=function(){for(var r=8;r<_moduleCount-8;r+=1){if(_modules[r][6]!=null)continue;_modules[r][6]=(r%2==0)}for(var c=8;c<_moduleCount-8;c+=1){if(_modules[6][c]!=null)continue;_modules[6][c]=(c%2==0)}},setupPositionAdjustPattern=function(){var pos=getPatternPosition(_typeNumber);for(var i=0;i<pos.length;i+=1){for(var j=0;j<pos.length;j+=1){var row=pos[i],col=pos[j];if(_modules[row][col]!=null)continue;for(var r=-2;r<=2;r+=1){for(var c=-2;c<=2;c+=1){if(r==-2||r==2||c==-2||c==2||(r==0&&c==0)){_modules[row+r][col+c]=true}else{_modules[row+r][col+c]=false}}}}}},setupTypeNumber=function(test){var bits=getBCHTypeNumber(_typeNumber);for(var i=0;i<18;i+=1){var mod=(!test&&((bits>>i)&1)==1);_modules[Math.floor(i/3)][i%3+_moduleCount-8-3]=mod}_modules.forEach(function(row,i){row.forEach(function(col,j){})});for(var i=0;i<18;i+=1){var mod=(!test&&((bits>>i)&1)==1);_modules[i%3+_moduleCount-8-3][Math.floor(i/3)]=mod}},setupTypeInfo=function(test,maskPattern){var data=(_errorCorrectionLevel<<3)|maskPattern,bits=getBCHTypeInfo(data);for(var i=0;i<15;i+=1){var mod=(!test&&((bits>>i)&1)==1);if(i<6){_modules[i][8]=mod}else if(i<8){_modules[i+1][8]=mod}else{_modules[_moduleCount-15+i][8]=mod}}for(var i=0;i<15;i+=1){var mod=(!test&&((bits>>i)&1)==1);if(i<8){_modules[8][_moduleCount-i-1]=mod}else if(i<9){_modules[8][15-i-1+1]=mod}else{_modules[8][15-i-1]=mod}}_modules[_moduleCount-8][8]=(!test)},mapData=function(data,maskPattern){var inc=-1,row=_moduleCount-1,bitIndex=7,byteIndex=0,maskFunc=getMaskFunction(maskPattern);for(var col=_moduleCount-1;col>0;col-=2){if(col==6)col-=1;while(true){for(var c=0;c<2;c+=1){if(_modules[row][col-c]==null){var dark=false;if(byteIndex<data.length){dark=(((data[byteIndex]>>>bitIndex)&1)==1)}if(maskFunc(row,col-c)){dark=!dark}_modules[row][col-c]=dark;bitIndex-=1;if(bitIndex==-1){byteIndex+=1;bitIndex=7}}}row+=inc;if(row<0||_moduleCount<=row){row-=inc;inc=-inc;break}}}},createBytes=function(buffer,rsBlocks){var offset=0,maxDcCount=0,maxEcCount=0,dcdata=[],ecdata=[];for(var r=0;r<rsBlocks.length;r+=1){dcdata.push([]);ecdata.push([])}for(var r=0;r<rsBlocks.length;r+=1){var dcCount=rsBlocks[r].dataCount,ecCount=rsBlocks[r].totalCount-dcCount;maxDcCount=Math.max(maxDcCount,dcCount);maxEcCount=Math.max(maxEcCount,ecCount);dcdata[r]=[];for(var i=0;i<dcCount;i+=1){dcdata[r][i]=0xff&buffer.getBuffer()[i+offset]}offset+=dcCount;var rsPoly=getErrorCorrectPolynomial(ecCount),rawPoly=qrPolynomial(dcdata[r],rsPoly.getLength()-1),modPoly=rawPoly.mod(rsPoly);ecdata[r]=[];for(var i=0;i<rsPoly.getLength()-1;i+=1){var modIndex=i+modPoly.getLength()-rsPoly.getLength()+1;ecdata[r][i]=(modIndex>=0)?modPoly.getAt(modIndex):0}}var totalCodeCount=0;for(var i=0;i<rsBlocks.length;i+=1){totalCodeCount+=rsBlocks[i].totalCount}var data=[];var index=0;for(var i=0;i<maxDcCount;i+=1){for(var r=0;r<rsBlocks.length;r+=1){if(i<dcdata[r].length){data[index]=dcdata[r][i];index+=1}}}for(var i=0;i<maxEcCount;i+=1){for(var r=0;r<rsBlocks.length;r+=1){if(i<ecdata[r].length){data[index]=ecdata[r][i];index+=1}}}return data},createData=function(typeNumber,errorCorrectionLevel,dataList){var rsBlocks=getRSBlocks(typeNumber,errorCorrectionLevel),buffer=qrBitBuffer();for(var i=0;i<dataList.length;i+=1){var data=dataList[i];buffer.put(data.getMode(),4);buffer.put(data.getLength(),getLengthInBits(data.getMode(),typeNumber));data.write(buffer)}var totalDataCount=0;for(var i=0;i<rsBlocks.length;i+=1){totalDataCount+=rsBlocks[i].dataCount}if(buffer.getLengthInBits()>totalDataCount*8){throw'code length overflow. ('+buffer.getLengthInBits()+'>'+totalDataCount*8+')'}if(buffer.getLengthInBits()+4<=totalDataCount*8){buffer.put(0,4)}while(buffer.getLengthInBits()%8!=0){buffer.putBit(false)}while(true){if(buffer.getLengthInBits()>=totalDataCount*8)break;buffer.put(PAD0,8);if(buffer.getLengthInBits()>=totalDataCount*8)break;buffer.put(PAD1,8)}return createBytes(buffer,rsBlocks)};_this.addData=function(data,mode){mode=mode||'Byte';switch(mode){case'Byte':_dataList.push(qr8BitByte(data));break;default:throw'mode:'+mode}};_this.isDark=function(row,col){if(row<0||_moduleCount<=row||col<0||_moduleCount<=col){throw row+','+col}return _modules[row][col]};_this.getModuleCount=function(){return _moduleCount};_this.make=function(){if(_typeNumber<1){var typeNumber=1;for(;typeNumber<40;typeNumber++){var rsBlocks=getRSBlocks(typeNumber,_errorCorrectionLevel),buffer=qrBitBuffer();for(var i=0;i<_dataList.length;i+=1){var data=_dataList[i];buffer.put(data.getMode(),4);buffer.put(data.getLength(),getLengthInBits(data.getMode(),typeNumber));data.write(buffer)}var totalDataCount=0;for(var i=0;i<rsBlocks.length;i+=1){totalDataCount+=rsBlocks[i].dataCount}if(buffer.getLengthInBits()<=totalDataCount*8)break}_typeNumber=typeNumber}makeImpl(false,getBestMaskPattern())};_this.createTableTag=function(cellSize,margin){cellSize=cellSize||2;margin=(typeof margin=='undefined')?cellSize*4:margin;var qrHtml='';qrHtml+='<table style="border-width:0;border-style:none;border-collapse:collapse;padding:0;margin:0;">';qrHtml+='<tbody>';for(var r=0;r<_this.getModuleCount();r+=1){qrHtml+='<tr>';for(var c=0;c<_this.getModuleCount();c+=1){qrHtml+='<td style="border-width:0;border-style:none;border-collapse:collapse;padding:0;margin:0;width:'+cellSize+'px;height:'+cellSize+'px;background-color:';qrHtml+=_this.isDark(r,c)?'#000':'#fff';qrHtml+=';"></td>'}qrHtml+='</tr>'}qrHtml+='</tbody>';qrHtml+='</table>';return qrHtml};_this.createSvgTag=function(cellSize,margin){cellSize=cellSize||2;margin=(typeof margin=='undefined')?cellSize*4:margin;var size=_this.getModuleCount()*cellSize+margin*2,qrSvg='',rect='';rect+='<rect width="100%" height="100%" fill="#ffffff"/>';for(var r=0;r<_this.getModuleCount();r+=1){for(var c=0;c<_this.getModuleCount();c+=1){if(_this.isDark(r,c)){rect+='<rect x="'+(c*cellSize+margin)+'" y="'+(r*cellSize+margin)+'" width="'+cellSize+'" height="'+cellSize+'" fill="#000000"/>'}}}qrSvg='<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">';qrSvg+=rect;qrSvg+='</svg>';return qrSvg};_this.createDataURL=function(cellSize,margin){cellSize=cellSize||2;margin=(typeof margin=='undefined')?cellSize*4:margin;var size=_this.getModuleCount()*cellSize+margin*2,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;var ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,size,size);ctx.fillStyle='#000000';for(var r=0;r<_this.getModuleCount();r+=1){for(var c=0;c<_this.getModuleCount();c+=1){if(_this.isDark(r,c)){ctx.fillRect(c*cellSize+margin,r*cellSize+margin,cellSize,cellSize)}}}return canvas.toDataURL('image/png')};return _this};qrcode.stringToBytes=function(s){var bytes=[];for(var i=0;i<s.length;i+=1){var c=s.charCodeAt(i);if(c<=0x7f){bytes.push(c)}else if(c<=0x7ff){bytes.push(0xc0|(c>>>6),0x80|(c&0x3f))}else{bytes.push(0xe0|(c>>>12),0x80|((c>>>6)&0x3f),0x80|(c&0x3f))}}return bytes};var QRMode={MODE_8BIT_BYTE:1<<2},QRErrorCorrectionLevel={L:1,M:0,Q:3,H:2},QRMaskPattern={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7},getLengthInBits=function(mode,type){if(1<=type&&type<10)return 8;else if(type<27)return 16;else if(type<41)return 16;throw'type:'+type},getLostPoint=function(){return 0},getMaskFunction=function(maskPattern){switch(maskPattern){case QRMaskPattern.PATTERN000:return function(i,j){return(i+j)%2==0};case QRMaskPattern.PATTERN001:return function(i,j){return i%2==0};case QRMaskPattern.PATTERN010:return function(i,j){return j%3==0};case QRMaskPattern.PATTERN011:return function(i,j){return(i+j)%3==0};case QRMaskPattern.PATTERN100:return function(i,j){return(Math.floor(i/2)+Math.floor(j/3))%2==0};case QRMaskPattern.PATTERN101:return function(i,j){return(i*j)%2+(i*j)%3==0};case QRMaskPattern.PATTERN110:return function(i,j){return((i*j)%2+(i*j)%3)%2==0};case QRMaskPattern.PATTERN111:return function(i,j){return((i*j)%3+(i+j)%2)%2==0};default:throw'bad maskPattern:'+maskPattern}},getPatternPosition=function(typeNumber){return[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]][typeNumber]},getGexp=function(n){if(n<1)throw'gexp:'+n;while(n<0)n+=255;while(n>=256)n-=255;return gexp_table[n]},getGlog=function(n){if(n<1)throw'glog:'+n;return glog_table[n]},gexp_table=[1,2,4,8,16,32,64,128,29,58,116,232,205,135,19,38,76,152,45,90,180,117,234,201,143,3,6,12,24,48,96,192,157,39,78,156,37,74,148,53,106,212,181,119,238,193,159,35,70,140,5,10,20,40,80,160,93,186,105,210,185,111,222,161,95,190,97,194,153,47,94,188,101,202,137,15,30,60,120,240,253,231,211,187,107,214,177,127,254,225,223,163,91,182,113,226,217,175,67,134,17,34,68,136,13,26,52,104,208,189,103,206,129,31,62,124,248,237,199,147,59,118,236,197,151,51,102,204,133,23,46,92,184,109,218,169,79,158,33,66,132,21,42,84,168,77,154,41,82,164,85,170,73,146,57,114,228,213,183,115,230,209,191,99,198,145,63,126,252,229,215,179,123,246,241,255,227,219,171,75,150,49,98,196,149,55,110,220,165,87,174,65,130,25,50,100,200,141,7,14,28,56,112,224,221,167,83,166,81,162,89,178,121,242,249,239,195,155,43,86,172,69,138,9,18,36,72,144,61,122,244,245,247,243,251,235,203,139,11,22,44,88,176,125,250,233,207,131,27,54,108,216,173,71,142],glog_table=[0,0,1,25,2,50,26,198,3,223,51,238,27,104,199,75,4,100,224,14,52,141,239,129,28,193,105,248,200,8,76,113,5,138,101,47,225,36,15,33,53,147,142,218,240,18,130,69,29,181,194,125,106,39,249,185,201,154,9,120,77,228,114,166,6,191,139,98,102,221,48,253,226,152,37,179,16,145,34,136,54,208,148,206,143,150,219,189,241,210,19,92,131,56,70,64,30,66,182,163,195,72,126,110,107,58,40,84,250,133,186,61,202,94,155,159,10,21,121,43,78,212,229,172,115,243,167,87,7,112,192,247,140,128,99,13,103,74,222,237,49,197,254,24,227,165,153,119,38,184,180,124,17,68,146,217,35,32,137,46,55,63,209,91,149,188,207,205,144,135,151,178,220,252,190,97,242,86,211,171,20,42,93,158,132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175],getBCHTypeInfo=function(data){var d=data<<10;while(getBCHDigit(d)-getBCHDigit(0x537)>=0)d^=(0x537<<(getBCHDigit(d)-getBCHDigit(0x537)));return((data<<10)|d)^0x5412},getBCHTypeNumber=function(data){var d=data<<12;while(getBCHDigit(d)-getBCHDigit(0x1f25)>=0)d^=(0x1f25<<(getBCHDigit(d)-getBCHDigit(0x1f25)));return(data<<12)|d},getBCHDigit=function(data){var digit=0;while(data!=0){digit+=1;data>>>=1}return digit},qrPolynomial=function(num,shift){if(typeof num.length=='undefined')throw num.length+'/'+shift;var _num=function(){var offset=0;while(offset<num.length&&num[offset]==0)offset+=1;var _num=[];for(var i=0;i<num.length-offset;i+=1)_num.push(num[i+offset]);return _num}(),_this={};_this.getAt=function(index){return _num[index]};_this.getLength=function(){return _num.length};_this.multiply=function(e){var num=[];for(var i=0;i<_this.getLength()+e.getLength()-1;i+=1)num.push(0);for(var i=0;i<_this.getLength();i+=1)for(var j=0;j<e.getLength();j+=1)num[i+j]^=getGexp(getGlog(_this.getAt(i))+getGlog(e.getAt(j)));return qrPolynomial(num,0)};_this.mod=function(e){if(_this.getLength()-e.getLength()<0)return _this;var ratio=getGlog(_this.getAt(0))-getGlog(e.getAt(0)),num=[];for(var i=0;i<_this.getLength();i+=1)num.push(_this.getAt(i));for(var i=0;i<e.getLength();i+=1)num[i]^=getGexp(getGlog(e.getAt(i))+ratio);return qrPolynomial(num,0).mod(e)};return _this},getErrorCorrectPolynomial=function(errorCorrectLength){var a=qrPolynomial([1],0);for(var i=0;i<errorCorrectLength;i+=1)a=a.multiply(qrPolynomial([1,getGexp(i)],0));return a},getRSBlocks=function(typeNumber,errorCorrectionLevel){var rsBlock=RS_BLOCK_TABLE[(typeNumber-1)*4+errorCorrectionLevel];if(typeof rsBlock=='undefined')throw'bad rs block @ typeNumber:'+typeNumber+'/errorCorrectionLevel:'+errorCorrectionLevel;var length=rsBlock.length/3,list=[];for(var i=0;i<length;i+=1){var count=rsBlock[i*3+0],totalCount=rsBlock[i*3+1],dataCount=rsBlock[i*3+2];for(var j=0;j<count;j+=1)list.push({totalCount:totalCount,dataCount:dataCount})}return list},RS_BLOCK_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],qr8BitByte=function(data){var _data=data,_bytes=qrcode.stringToBytes(data),_this={};_this.getMode=function(){return QRMode.MODE_8BIT_BYTE};_this.getLength=function(){return _bytes.length};_this.write=function(buffer){for(var i=0;i<_bytes.length;i+=1)buffer.put(_bytes[i],8)};return _this},qrBitBuffer=function(){var _buffer=[],_length=0,_this={};_this.getBuffer=function(){return _buffer};_this.getAt=function(index){var bufIndex=Math.floor(index/8);return((_buffer[bufIndex]>>>(7-index%8))&1)==1};_this.put=function(num,length){for(var i=0;i<length;i+=1)_this.putBit(((num>>>(length-i-1))&1)==1)};_this.getLengthInBits=function(){return _length};_this.putBit=function(bit){var bufIndex=Math.floor(_length/8);if(_buffer.length<=bufIndex)_buffer.push(0);if(bit)_buffer[bufIndex]|=(0x80>>>(_length%8));_length+=1};return _this};return qrcode}();
-    // Wrapper function for easy use
-    function generateQRDataURL(text, size) {
-        size = size || 280;
-        console.log('generateQRDataURL called with text length:', text.length);
+    var qrLibraryLoaded = false;
+    var qrLoadAttempts = 0;
+    var qrMaxAttempts = 3;
 
-        // Check if qrcode function exists
-        if (typeof qrcode !== 'function') {
-            throw new Error('qrcode library not loaded');
+    // CDN URLs to try
+    var qrCdnUrls = [
+        'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+        'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
+    ];
+
+    function loadQrLibrary() {
+        if (qrLoadAttempts >= qrMaxAttempts) {
+            console.error('Failed to load QR library after', qrMaxAttempts, 'attempts');
+            return;
         }
 
-        var qr = qrcode(0, 'M');
-        qr.addData(text);
-        qr.make();
-
-        var moduleCount = qr.getModuleCount();
-        console.log('QR module count:', moduleCount);
-
-        var cellSize = Math.max(2, Math.floor(size / (moduleCount + 8)));
-        console.log('Cell size:', cellSize);
-
-        var dataUrl = qr.createDataURL(cellSize, cellSize * 2);
-        console.log('DataURL generated, length:', dataUrl ? dataUrl.length : 0);
-
-        return dataUrl;
+        var script = document.createElement('script');
+        script.src = qrCdnUrls[qrLoadAttempts];
+        script.onload = function() {
+            qrLibraryLoaded = true;
+            console.log('QR library loaded from:', qrCdnUrls[qrLoadAttempts]);
+        };
+        script.onerror = function() {
+            console.warn('Failed to load QR from:', qrCdnUrls[qrLoadAttempts]);
+            qrLoadAttempts++;
+            loadQrLibrary();
+        };
+        document.head.appendChild(script);
     }
-    console.log('QR library loaded inline, qrcode type:', typeof qrcode);
+
+    // Start loading
+    loadQrLibrary();
     </script>
 
     <script>
@@ -822,30 +827,41 @@
             const qrLoading = document.getElementById('qr-loading');
             const qrError = document.getElementById('qr-error');
 
-            console.log('Generating QR with inline library...');
+            console.log('Generating QR, attempt:', attempt);
             console.log('qrData:', qrData);
-            console.log('typeof qrcode:', typeof qrcode);
-            console.log('typeof generateQRDataURL:', typeof generateQRDataURL);
+            console.log('QRCode available:', typeof QRCode !== 'undefined');
 
-            try {
-                // Use inline qrcode-generator library
-                const dataUrl = generateQRDataURL(qrData, 280);
-
-                if (dataUrl) {
-                    console.log('QR generated successfully, dataUrl length:', dataUrl.length);
-                    qrImage.src = dataUrl;
-                    qrImage.style.display = 'block';
-                    qrLoading.style.display = 'none';
-                } else {
-                    throw new Error('generateQRDataURL returned null');
+            // Check if library is loaded
+            if (typeof QRCode === 'undefined') {
+                if (attempt < 10) {
+                    // Wait and retry
+                    setTimeout(() => generateQrWithRetry(qrData, attempt + 1), 300);
+                    return;
                 }
-            } catch (e) {
-                console.error('QR exception:', e);
-                console.error('Stack:', e.stack);
                 qrLoading.style.display = 'none';
                 qrError.style.display = 'block';
-                qrError.textContent = 'Errore: ' + (e.message || e);
+                qrError.textContent = 'Libreria QR non caricata. Ricarica la pagina.';
+                return;
             }
+
+            // Use QRCode.toDataURL from qrcode npm package
+            QRCode.toDataURL(qrData, {
+                width: 280,
+                margin: 2,
+                color: { dark: '#000000', light: '#ffffff' }
+            })
+            .then(function(dataUrl) {
+                console.log('QR generated successfully');
+                qrImage.src = dataUrl;
+                qrImage.style.display = 'block';
+                qrLoading.style.display = 'none';
+            })
+            .catch(function(err) {
+                console.error('QR generation error:', err);
+                qrLoading.style.display = 'none';
+                qrError.style.display = 'block';
+                qrError.textContent = 'Errore generazione QR: ' + (err.message || err);
+            });
         }
 
         // Generate QR data (compact JSON with SARGEST: prefix)
