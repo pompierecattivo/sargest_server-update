@@ -179,13 +179,21 @@
         .qr-container {
             text-align: center;
             padding: 1.5rem;
-            background: white;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
             border-radius: 12px;
             margin: 1rem 0;
+            color-scheme: light;
         }
 
-        .qr-container canvas {
+        .qr-container canvas,
+        .qr-container img {
             max-width: 100%;
+            background: #ffffff !important;
+        }
+
+        #qr-canvas {
+            background: #ffffff !important;
         }
 
         .qr-placeholder {
@@ -508,8 +516,8 @@
             </div>
             <div class="modal-body">
                 <p id="qr-profile-name" style="text-align: center; margin-bottom: 1rem; color: #90a4ae;"></p>
-                <div class="qr-container" style="background:#ffffff;padding:1rem;border-radius:12px;">
-                    <div id="qr-canvas" style="display:inline-block;background:#ffffff;"></div>
+                <div class="qr-container">
+                    <div id="qr-canvas" style="display:inline-block;"></div>
                     <img id="qr-image" alt="QR Code" style="max-width:280px;display:none;">
                     <div id="qr-loading" style="padding:2rem;color:#666;">Generazione QR...</div>
                     <div id="qr-error" style="display:none;padding:2rem;color:#ef5350;"></div>
