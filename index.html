@@ -246,6 +246,15 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
         }
 
         .icon-btn:hover {
@@ -253,13 +262,37 @@
         }
 
         .icon-btn.qr {
-            background: rgba(79, 195, 247, 0.2);
+            background: rgba(79, 195, 247, 0.3);
             color: #4fc3f7;
+        }
+
+        .icon-btn.qr:hover {
+            background: rgba(79, 195, 247, 0.5);
         }
 
         .icon-btn.delete {
             background: rgba(239, 83, 80, 0.2);
             color: #ef5350;
+        }
+
+        .btn-qr {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            background: #4fc3f7;
+            color: #0d1b2a;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-qr:hover {
+            background: #81d4fa;
+        }
+
+        .btn-qr:active {
+            transform: scale(0.95);
         }
 
         .empty-state {
@@ -476,7 +509,10 @@
             <div class="modal-body">
                 <p id="qr-profile-name" style="text-align: center; margin-bottom: 1rem; color: #90a4ae;"></p>
                 <div class="qr-container">
-                    <canvas id="qr-canvas"></canvas>
+                    <canvas id="qr-canvas" style="display:none;"></canvas>
+                    <img id="qr-image" alt="QR Code" style="max-width:280px;">
+                    <div id="qr-loading" style="padding:2rem;color:#666;">Generazione QR...</div>
+                    <div id="qr-error" style="display:none;padding:2rem;color:#ef5350;"></div>
                 </div>
                 <p style="text-align: center; font-size: 0.85rem; color: #90a4ae; margin-top: 1rem;">
                     Mostra questo QR code all'operatore SARGest per una registrazione rapida
@@ -485,8 +521,43 @@
         </div>
     </div>
 
-    <!-- QRCode.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QRCode.js library - multiple fallbacks -->
+    <script>
+        var qrLibLoaded = false;
+        var qrLibLoadAttempts = 0;
+        var qrCDNs = [
+            'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+            'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
+        ];
+
+        function loadQRLibrary(index) {
+            if (index >= qrCDNs.length) {
+                console.error('Failed to load QRCode library from all CDNs');
+                return;
+            }
+
+            var script = document.createElement('script');
+            script.src = qrCDNs[index];
+            script.onload = function() {
+                if (typeof QRCode !== 'undefined') {
+                    qrLibLoaded = true;
+                    console.log('QRCode library loaded from:', qrCDNs[index]);
+                } else {
+                    console.warn('QRCode not defined after loading, trying next CDN');
+                    loadQRLibrary(index + 1);
+                }
+            };
+            script.onerror = function() {
+                console.warn('Failed to load from:', qrCDNs[index]);
+                loadQRLibrary(index + 1);
+            };
+            document.head.appendChild(script);
+        }
+
+        // Start loading
+        loadQRLibrary(0);
+    </script>
 
     <script>
         // Storage key
@@ -611,10 +682,8 @@
                             <div class="profile-type">${typeLabel}${subtitle ? ' - ' + escapeHtml(subtitle) : ''}</div>
                         </div>
                         <div class="profile-actions">
-                            <button class="icon-btn qr" onclick="showQr(${index})" title="Mostra QR">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v3h-2v-3zm3 3h3v2h-3v-2zm0 3h3v3h-3v-3zm-3 0h2v3h-2v-3z"/>
-                                </svg>
+                            <button class="btn-qr" onclick="showQr(${index})">
+                                QR
                             </button>
                             <button class="icon-btn" onclick="editProfile(${index})" title="Modifica">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -734,26 +803,79 @@
 
             // Generate compact QR data
             const qrData = generateQrData(profile);
+            console.log('QR Data:', qrData);
+            console.log('QR Data length:', qrData.length);
 
             // Update modal
             document.getElementById('qr-profile-name').textContent = profile.name;
             document.getElementById('qr-modal').classList.add('active');
 
-            // Generate QR code
-            const canvas = document.getElementById('qr-canvas');
-            QRCode.toCanvas(canvas, qrData, {
-                width: 280,
-                margin: 2,
-                color: {
-                    dark: '#0d1b2a',
-                    light: '#ffffff'
+            // Reset display states
+            const qrImage = document.getElementById('qr-image');
+            const qrLoading = document.getElementById('qr-loading');
+            const qrError = document.getElementById('qr-error');
+
+            qrImage.style.display = 'none';
+            qrLoading.style.display = 'block';
+            qrError.style.display = 'none';
+
+            // Wait for library if still loading
+            generateQrWithRetry(qrData, 0);
+        }
+
+        function generateQrWithRetry(qrData, attempt) {
+            const qrImage = document.getElementById('qr-image');
+            const qrLoading = document.getElementById('qr-loading');
+            const qrError = document.getElementById('qr-error');
+
+            // Check if QRCode library is available
+            if (typeof QRCode === 'undefined') {
+                if (attempt < 10) {
+                    // Wait 300ms and retry
+                    console.log('QRCode not ready, attempt', attempt + 1);
+                    setTimeout(function() {
+                        generateQrWithRetry(qrData, attempt + 1);
+                    }, 300);
+                    return;
                 }
-            }, function(error) {
-                if (error) {
-                    console.error('QR generation error:', error);
-                    showToast('Errore generazione QR', true);
-                }
-            });
+                console.error('QRCode library not available after retries');
+                qrLoading.style.display = 'none';
+                qrError.style.display = 'block';
+                qrError.textContent = 'Libreria QR non caricata. Ricarica la pagina.';
+                return;
+            }
+
+            console.log('QRCode library available, generating...');
+
+            // Use toDataURL to generate an image (more compatible than canvas)
+            try {
+                QRCode.toDataURL(qrData, {
+                    width: 280,
+                    margin: 2,
+                    color: {
+                        dark: '#0d1b2a',
+                        light: '#ffffff'
+                    },
+                    errorCorrectionLevel: 'M'
+                }, function(error, url) {
+                    if (error) {
+                        console.error('QR generation error:', error);
+                        qrLoading.style.display = 'none';
+                        qrError.style.display = 'block';
+                        qrError.textContent = 'Errore generazione: ' + error.message;
+                    } else {
+                        console.log('QR generated successfully, URL length:', url.length);
+                        qrImage.src = url;
+                        qrImage.style.display = 'block';
+                        qrLoading.style.display = 'none';
+                    }
+                });
+            } catch (e) {
+                console.error('QR exception:', e);
+                qrLoading.style.display = 'none';
+                qrError.style.display = 'block';
+                qrError.textContent = 'Errore: ' + e.message;
+            }
         }
 
         // Generate QR data (compact JSON with SARGEST: prefix)
