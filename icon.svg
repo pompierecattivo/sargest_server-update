@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0d1b2a"/>
+    </linearGradient>
+    <linearGradient id="mountain1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4fc3f7"/>
+      <stop offset="100%" style="stop-color:#29b6f6"/>
+    </linearGradient>
+    <linearGradient id="mountain2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#81d4fa"/>
+      <stop offset="100%" style="stop-color:#4fc3f7"/>
+    </linearGradient>
+    <linearGradient id="snow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e3f2fd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect fill="url(#bgGrad)" width="512" height="512" rx="96"/>
+
+  <!-- Back mountain (lighter) -->
+  <path d="M80 380 L200 180 L280 280 L320 220 L440 380 Z" fill="url(#mountain2)" opacity="0.6"/>
+
+  <!-- Front mountain (main) -->
+  <path d="M40 400 L180 140 L260 260 L320 180 L480 400 Z" fill="url(#mountain1)"/>
+
+  <!-- Snow cap on main peak -->
+  <path d="M180 140 L150 200 L180 190 L210 200 Z" fill="url(#snow)"/>
+
+  <!-- Snow cap on secondary peak -->
+  <path d="M320 180 L300 220 L320 212 L340 220 Z" fill="url(#snow)"/>
+
+  <!-- Rescue cross (top right corner) -->
+  <g transform="translate(400, 100)">
+    <rect x="-8" y="-28" width="16" height="56" rx="4" fill="#ff9800"/>
+    <rect x="-28" y="-8" width="56" height="16" rx="4" fill="#ff9800"/>
+  </g>
+</svg>
