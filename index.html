@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="light dark">
     <meta name="description" content="SARGest - Registrazione Risorse per Search and Rescue">
     <title>SARGest - Registra Risorsa</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/register/manifest.json">
     <style>
         * {
             box-sizing: border-box;
@@ -768,7 +768,7 @@
                         <button class="support-type-btn" data-stype="elicottero">Elicottero</button>
                         <button class="support-type-btn" data-stype="imbarcazione">Imbarcazione</button>
                         <button class="support-type-btn" data-stype="aeromobile">Aeromobile</button>
-                        <button class="support-type-btn" data-stype="canadair">Canadair</button>
+                        <button class="support-type-btn" data-stype="dispositivo">Dispositivo</button>
                         <button class="support-type-btn" data-stype="altro">Altro</button>
                     </div>
                 </div>
@@ -787,6 +787,13 @@
                 <button class="btn btn-primary" onclick="saveProfile('support')">Salva Profilo</button>
             </div>
         </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 2rem 0 1rem; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="color: #607d8b; font-size: 0.75rem;">
+                SARGest - <a href="https://sardroid.it" target="_blank" style="color: #4fc3f7; text-decoration: none;">sardroid.it</a>
+            </p>
+        </footer>
     </div>
 
     <!-- QR Modal -->
@@ -832,7 +839,7 @@
             elicottero: 'Elicottero',
             imbarcazione: 'Imbarcazione',
             aeromobile: 'Aeromobile',
-            canadair: 'Canadair',
+            dispositivo: 'Dispositivo',
             altro: 'Altro'
         };
 
