@@ -1,6 +1,6 @@
 {
   "versione": "1.0.3",
-  "url": "https://github.com/pompierecattivo/sargest_server-update/releases/download/v1.0.0/SargestServer.exe",
+  "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
     "Prima release pubblica",
     "Gestione eventi di ricerca",
