@@ -389,17 +389,25 @@
             isolation: isolate;
         }
 
-        #qr-canvas canvas,
-        #qr-canvas img {
+        #qr-canvas canvas {
             filter: none !important;
             -webkit-filter: none !important;
             mix-blend-mode: normal !important;
             background: #ffffff !important;
             background-color: #ffffff !important;
+            display: block !important;
+        }
+
+        /* qrcodejs creates both canvas AND img - hide img to avoid duplicate */
+        #qr-canvas img {
+            display: none !important;
         }
 
         /* Force light mode for QR section regardless of system preference */
         @media (prefers-color-scheme: dark) {
+            #qr-canvas img {
+                display: none !important;
+            }
             .qr-container,
             .qr-container *,
             #qr-canvas,
@@ -1197,8 +1205,17 @@
             showToast('Profilo eliminato');
         }
 
-        // Show QR code
+        // Show QR code - with debounce to prevent double calls on touch devices
+        let showQrInProgress = false;
         function showQr(index) {
+            // Prevent double calls (touch + click on mobile emulation)
+            if (showQrInProgress) {
+                console.log('showQr skipped - already in progress');
+                return;
+            }
+            showQrInProgress = true;
+            setTimeout(() => { showQrInProgress = false; }, 300);
+
             const profiles = getProfiles();
             const profile = profiles[index];
 
@@ -1273,6 +1290,21 @@
                     container.setAttribute('data-theme', 'light');
                 }
 
+                // MutationObserver to remove img elements as soon as they are added
+                var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.tagName === 'IMG') {
+                                console.log('Removing duplicate img element');
+                                node.remove();
+                            }
+                        });
+                    });
+                });
+                observer.observe(qrCanvas, { childList: true, subtree: true });
+                // Stop observing after 1 second
+                setTimeout(function() { observer.disconnect(); }, 1000);
+
                 // Use qrcodejs library (constructor-based API)
                 new QRCode(qrCanvas, {
                     text: qrData,
@@ -1282,6 +1314,13 @@
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.M
                 });
+
+                // Immediately remove any img elements (qrcodejs creates both canvas and img)
+                var imgToRemove = qrCanvas.querySelector('img');
+                if (imgToRemove) {
+                    console.log('Removing img immediately after QRCode creation');
+                    imgToRemove.remove();
+                }
 
                 // Hide loading after a short delay and ensure white background on generated elements
                 setTimeout(function() {
@@ -1295,11 +1334,16 @@
                     });
                     var innerCanvas = qrCanvas.querySelector('canvas');
                     var innerImg = qrCanvas.querySelector('img');
+                    // qrcodejs creates both canvas AND img - remove img completely to avoid duplicates
                     if (innerCanvas) {
                         innerCanvas.style.backgroundColor = '#ffffff';
                         innerCanvas.style.display = 'block';
-                    }
-                    if (innerImg) {
+                        // Remove the img element completely since canvas is working
+                        if (innerImg) {
+                            innerImg.remove();
+                        }
+                    } else if (innerImg) {
+                        // Fallback: show img only if canvas doesn't exist
                         innerImg.style.backgroundColor = '#ffffff';
                         innerImg.style.display = 'block';
                     }
