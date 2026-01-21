@@ -1,10 +1,10 @@
 {
-  "versione": "2.0.0",
+  "versione": "2.0.1",
   "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
     "Prima release pubblica",
     "Gestione eventi di ricerca",
     "Gestione persone, mezzi, squadre, zone",
-    "Implementazione websocket"
+    "Implementazione websocket + fix gpx"
   ]
 }
