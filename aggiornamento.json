@@ -1,7 +1,8 @@
 {
-  "versione": "2.3.2",
+  "versione": "2.3.3",
   "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
-    "Scelta icona campo base"
+    "Scelta icona campo base",
+    "Rimosso ordinamento squadre"
   ]
 }
