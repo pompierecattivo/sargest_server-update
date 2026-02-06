@@ -1,11 +1,7 @@
 {
-  "versione": "2.3.1",
+  "versione": "2.3.2",
   "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
-    "Prima release pubblica",
-    "Gestione eventi di ricerca",
-    "Gestione persone, mezzi, squadre, zone",
-    "Bug Fix - Migliorie UI",
-    "Switch squadre attive"
+    "Scelta icona campo base"
   ]
 }
