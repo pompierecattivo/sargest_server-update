@@ -1,9 +1,10 @@
 {
-  "versione": "2.3.6",
+  "versione": "2.3.7",
   "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
     "Scelta icona campo base",
     "Rimosso ordinamento squadre",
-    "Drag and drop squadre sulla mappa"
+    "Drag and drop squadre sulla mappa",
+    "Cerca localita sulla mappa"
   ]
 }
