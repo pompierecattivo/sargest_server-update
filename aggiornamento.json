@@ -1,8 +1,9 @@
 {
-  "versione": "2.3.9",
+  "versione": "2.4.0",
   "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
     "Guida utente",
-    "Effemeridi"
+    "Effemeridi",
+    "Guest Perpetuo"
   ]
 }
