@@ -951,7 +951,15 @@
 
             let steps = [];
 
-            if (isIOS) {
+            if (isIOS && !isSafari) {
+                steps = [
+                    { text: '<strong style="color:#e74c3c">Attenzione:</strong> su iPhone/iPad devi usare <strong>Safari</strong>' },
+                    { text: 'Apri questo stesso indirizzo in <strong>Safari</strong>' },
+                    { text: 'Tocca l\'icona ' + iconShare + ' <strong>Condividi</strong> in basso' },
+                    { text: 'Scorri e tocca <strong>"Aggiungi a schermata Home"</strong>' },
+                    { text: 'Tocca <strong>"Aggiungi"</strong> in alto a destra' }
+                ];
+            } else if (isIOS) {
                 steps = [
                     { text: 'Tocca l\'icona ' + iconShare + ' <strong>Condividi</strong> in basso' },
                     { text: 'Scorri e tocca <strong>"Aggiungi a schermata Home"</strong>' },
