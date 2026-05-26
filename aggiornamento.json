@@ -1,7 +1,8 @@
 {
-  "versione": "3.0.0",
+  "versione": "3.0.1",
   "url": "https://github.com/pompierecattivo/sargest_server-update/releases/latest/download/SargestServer.exe",
   "note": [
-    "Windows Installer"
+    "Windows Installer",
+    "Bug Fix"
   ]
 }
